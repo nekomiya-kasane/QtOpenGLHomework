@@ -131,7 +131,7 @@ class MyGLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
     SHOW_NORM = 0x2000u,
     SHOW_COLOR = 0x4000u
   } _lightingModel = PHONG;
-  int _guiLightingModel = 3;
+  int _guiLightingModel = 2;
 
   DirectionalLight _dirLight;
   SpotLight _spotLight;

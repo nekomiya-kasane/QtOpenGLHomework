@@ -149,7 +149,7 @@ vec3 CalculateSpotLight(SpotLight light, vec3 norm) {
                        );
         return vec3(ambient + diffuse + specular) * intensity * attenuation;
     } else { // phong blinn
-        vec3 bisector = normalize(normalize(lightDirection) + viewDirection);
+        vec3 bisector = normalize(normalize(lightDirection) + normalize(viewDirection));
         vec3 specular = light.specular.xyz * vec3(material.specular)
                         * pow(
                             max(dot(norm, bisector), 0.0),
@@ -193,7 +193,7 @@ vec3 CalculatePointLight(PointLight light, vec3 norm) {
 
         return vec3(ambient + diffuse + specular) * attenuationFactor;
     } else { // phong blinn
-        vec3 bisector = normalize(normalize(lightDirection) + viewDirection);
+        vec3 bisector = normalize(normalize(lightDirection) + normalize(viewDirection));
         vec3 specular = light.specular.xyz * vec3(material.specular)
                         * pow(
                             max(dot(norm, bisector), 0.0),
