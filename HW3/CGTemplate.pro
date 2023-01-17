@@ -12,6 +12,7 @@ INCLUDEPATH += includes
 
 SOURCES += \
     src/checkpoint.cpp \
+    src/light.cpp \
     src/main.cpp \
     src/mesh.cpp \
     src/myglwidget.cpp \
@@ -23,6 +24,7 @@ HEADERS += \
     includes/GL/wglew.h \
     includes/common.h \
     includes/events.h \
+    includes/light.h \
     includes/mesh.h \
     includes/myglwidget.h
 

@@ -11,6 +11,7 @@
 #include "events.h"
 #include "imgui.h"
 #include "imgui_internal.h"
+#include "light.h"
 
 struct Camera {
   QVector3D position = {-0.6f, 2.0f, -5.5f}, front, up, right;
@@ -119,5 +120,10 @@ class MyGLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
     QVector3D specular = {0.764249f, 0.764249f, 0.764249f};
     float shiness = 5.60558655f;
   } _material;
+
+  // Lights
+  DirectionalLight _dirLight;
+  SpotLight _spotLight;
+  PointLight _pointLight;
 };
 #endif  // MYGLWIDGET_HF

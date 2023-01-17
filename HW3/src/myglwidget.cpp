@@ -255,7 +255,13 @@ void MyGLWidget::paintGL() {
     _mainShader.setUniformValue("material.shiness", _material.shiness);
 
     // Update Lights
-    // - Directional Light
+    _dirLight.AddGUI();
+    _spotLight.AddGUI();
+    _pointLight.AddGUI();
+
+    _dirLight.UpdateToShader("directionalLight", _mainShader);
+    _spotLight.UpdateToShader("spotLight", _mainShader);
+    _pointLight.UpdateToShader("pointLight", _mainShader);
 
     // Draw
     auto& instance = _sphereMeshes.at(static_cast<size_t>(_currentMesh));
