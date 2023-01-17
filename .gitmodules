@@ -1,0 +1,3 @@
+[submodule "HW3/third_party/qtimgui"]
+	path = HW3/third_party/qtimgui
+	url = https://github.com/seanchas116/qtimgui.git
