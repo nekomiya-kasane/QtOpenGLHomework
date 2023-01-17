@@ -57,6 +57,19 @@ void MyGLWidget::initializeGL() {
   glEnable(GL_DEPTH_TEST);
   glDepthFunc(GL_LESS);
 
+  // Prepare Camera
+  _camera.front[0] =
+      std::cos(ToRadian(_camera.yaw)) * std::cos(ToRadian(_camera.pitch));
+  _camera.front[1] = std::sin(ToRadian(_camera.pitch));
+  _camera.front[2] =
+      std::sin(ToRadian(_camera.yaw)) * std::cos(ToRadian(_camera.pitch));
+  _camera.front = _camera.front.normalized();
+
+  auto ya = QVector3D{0, 1, 0};
+  _camera.right = QVector3D::crossProduct(_camera.front, ya).normalized();
+  _camera.up =
+      QVector3D::crossProduct(_camera.right, _camera.front).normalized();
+
   // Prepare Shaders
 
   auto vertShader = new QOpenGLShader(QOpenGLShader::Vertex);
@@ -174,16 +187,77 @@ void MyGLWidget::paintGL() {
   _fps[_fpsBufferSize - 1] = static_cast<float>(fps);
   ImGui::PlotLines("FPS", _fps, static_cast<int>(_fpsBufferSize));
   ImGui::ColorEdit4("clear color", &_backgroundColor[0]);
-  ImGui::DragInt("Tessellation of Sphere", &_currentMesh, 20.0f, 10, 110, "%d");
+  ImGui::DragInt("Tessellation of Sphere", &_currentMeshWrap, 0.2f, 10, 110,
+                 "%d");
+  ImGui::ColorEdit3("Material - Ambient", &_material.ambient[0]);
+  ImGui::ColorEdit3("Material - Diffuse", &_material.diffuse[0]);
+  ImGui::ColorEdit3("Material - Specular", &_material.specular[0]);
+  ImGui::DragFloat("Material - Shiness", &_material.shiness);
+  _currentMesh = (static_cast<int>(_currentMeshWrap) - 10) / 20 * 20 + 10;
 
+  // Update Camera
+  if (_status._mouseButtonStatus[Qt::MouseButton::LeftButton].held &&
+      _status._moved) {
+    // rotate
+    float fov_x = _camera.aspect * _camera.fov,
+          rot_x = _status._mouseMoveCoord[0] / 2 * fov_x;
+    float rot_y = _status._mouseMoveCoord[1] / 2 * _camera.fov;
+
+    _camera.yaw -= rot_x * _camera.factorRot;
+    _camera.pitch += rot_y * _camera.factorRot;
+
+    if (_camera.pitch > 89.0f) _camera.pitch = 89.0f;
+    if (_camera.pitch < -89.0f) _camera.pitch = -89.0f;
+
+    _status.ResetMove();
+  }
+
+  if (_status._wheeled) {
+    _camera.wheelFov += _status._mouseWheeling[1] * _camera.factorFov;
+    _camera.wheelFov = _camera.wheelFov < -10  ? -10
+                       : _camera.wheelFov > 10 ? 10
+                                               : _camera.wheelFov;
+    _camera.fov = std::atan(_camera.wheelFov) + 3.1415926f / 2;
+
+    _status.ResetWheel();
+
+    std::cout << _camera.wheelFov << "," << _camera.fov << std::endl;
+  }
+
+  _camera.front[0] =
+      std::cos(ToRadian(_camera.yaw)) * std::cos(ToRadian(_camera.pitch));
+  _camera.front[1] = std::sin(ToRadian(_camera.pitch));
+  _camera.front[2] =
+      std::sin(ToRadian(_camera.yaw)) * std::cos(ToRadian(_camera.pitch));
+  _camera.front = _camera.front.normalized();
+
+  auto ya = QVector3D{0, 1, 0};
+  _camera.right = QVector3D::crossProduct(_camera.front, ya).normalized();
+  _camera.up =
+      QVector3D::crossProduct(_camera.right, _camera.front).normalized();
+
+  // Update Model
   {
     // Update background
     const auto& c = _backgroundColor;
     glClearColor(c[0], c[1], c[2], c[3]);
 
-    // Draw Sphere
+    // Update Transformations
     _mainShader.bind();
+    _mainShader.setUniformValue("view", GetViewMatrix());
+    _mainShader.setUniformValue("proj", GetProjMatrix());
+    _mainShader.setUniformValue("model", kIndetity);
 
+    // Update Material
+    _mainShader.setUniformValue("material.ambient", _material.ambient);
+    _mainShader.setUniformValue("material.diffuse", _material.diffuse);
+    _mainShader.setUniformValue("material.specular", _material.specular);
+    _mainShader.setUniformValue("material.shiness", _material.shiness);
+
+    // Update Lights
+    // - Directional Light
+
+    // Draw
     auto& instance = _sphereMeshes.at(static_cast<size_t>(_currentMesh));
     instance.vao->bind();
     instance.vbo->bind();
@@ -208,6 +282,8 @@ void MyGLWidget::paintGL() {
 #####################################################*/
 void MyGLWidget::resizeGL(int width, int height) {
   glViewport(0, 0, width, height);
+  _camera.aspect = static_cast<float>(width) / height;
+
   update();
 }
 
@@ -218,14 +294,16 @@ void MyGLWidget::resizeGL(int width, int height) {
 ##  参数描述： 无
 #####################################################*/
 const QMatrix4x4& MyGLWidget::GetViewMatrix() {
-  _view.lookAt(_camera.position, _camera.position + 2 * _camera.front,
-               _camera.up);
+  _view.setToIdentity();
+  _view.lookAt(_camera.position, _camera.position + _camera.front, _camera.up);
   return _view;
 }
 
 const QMatrix4x4& MyGLWidget::GetProjMatrix() {
+  _proj.setToIdentity();
   if (_isPerspective) {
-    _proj.perspective(_camera.fov, _camera.aspect, _camera.zNear, _camera.zFar);
+    _proj.perspective(ToDegree(_camera.fov), _camera.aspect, _camera.zNear,
+                      _camera.zFar);
   } else {
     _proj.ortho(-_camera.aspect * _camera.scale, _camera.aspect * _camera.scale,
                 -1.0f * _camera.scale, 1.0f * _camera.scale, _camera.zNear,
@@ -233,3 +311,75 @@ const QMatrix4x4& MyGLWidget::GetProjMatrix() {
   }
   return _proj;
 }
+
+void MyGLWidget::mousePressEvent(QMouseEvent* event) {
+  auto& io = ImGui::GetIO();
+  if (!io.WantCaptureMouse) {
+    _status._mouseButtonStatus[event->button()] =
+        MouseButtonStatus(event->button(), event->type());
+  }
+}
+
+void MyGLWidget::mouseReleaseEvent(QMouseEvent* event) {
+  auto& io = ImGui::GetIO();
+  if (!io.WantCaptureMouse) {
+    _status._mouseButtonStatus[event->button()] =
+        MouseButtonStatus(event->button(), event->type());
+  }
+}
+void MyGLWidget::mouseMoveEvent(QMouseEvent* event) {
+  auto& io = ImGui::GetIO();
+  if (!io.WantCaptureMouse) {
+    QVector2D newPos = {static_cast<float>(event->x()),
+                        static_cast<float>(event->y())};
+
+    _status._mouseMove = newPos - _status._mousePos;
+    _status._mousePos = newPos;
+
+    _status._mouseCoord[0] = _status._mousePos[0] / width();
+    _status._mouseCoord[1] = _status._mousePos[1] / height();
+
+    _status._mouseMoveCoord[0] = _status._mouseMove[0] / width();
+    _status._mouseMoveCoord[1] = _status._mouseMove[1] / height();
+
+    _status._mouseNormalCoord[0] =
+        static_cast<float>(_status._mousePos[0] - 0.5f * width()) /
+        static_cast<float>(0.5f * width());
+    _status._mouseNormalCoord[1] =
+        static_cast<float>(_status._mousePos[1] - 0.5f * height()) /
+        static_cast<float>(0.5f * height());
+
+    for (auto& status : _status._mouseButtonStatus) {
+      if (status.second.down) {
+        status.second.held = true;
+      }
+    }
+
+    _status._moved = true;
+
+    std::cout << event->x() << ", " << event->y() << std::endl;
+  }
+}
+
+#if QT_CONFIG(wheelevent)
+void MyGLWidget::wheelEvent(QWheelEvent* event) {
+  _status._mouseWheeling[0] = static_cast<float>(event->x());
+  _status._mouseWheeling[1] = static_cast<float>(event->y());
+  _status._wheeled = true;
+}
+#endif
+
+void MyGLWidget::Status::ResetMove() {
+  _mouseCoord[0] = 0;
+  _mouseCoord[1] = 0;
+
+  _mouseMoveCoord[0] = 0;
+  _mouseMoveCoord[1] = 0;
+
+  _moved = false;
+}
+
+void MyGLWidget::Status::ResetWheel() { _wheeled = false; }
+
+// void MyGLWidget::keyPressEvent(QKeyEvent* event);
+// void MyGLWidget::keyReleaseEvent(QKeyEvent* event);

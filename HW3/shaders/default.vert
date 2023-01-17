@@ -16,8 +16,8 @@ out vec3 vso_color;
 
 void main()
 {
-    gl_Position = vec4(position, 1.0);
-    vso_position = gl_Position;
+    gl_Position = proj * view * vec4(position, 1.0);
+    vso_position = vec4(position, 1.0);
     vso_normal = (transpose(inverse(view)) * model * vec4(normal, 0)).xyz;
     vso_texcoord = texcoord;
     vso_color = color;
