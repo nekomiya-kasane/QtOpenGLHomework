@@ -162,6 +162,37 @@ void MyGLWidget::initializeGL() {
 
   _mainShader.release();
 
+  // preset lights
+  // directionalLight1.direction = { 0.5f, 0.5f, 0.0f, 1.0f };
+  _dirLight.direction = {-1.0f, -1.0f, 0.0f, 0.0f};
+  _dirLight.ambient = {0.2f, 0.2f, 0.3f, 1.0f};
+  _dirLight.diffuse = {1.0f, 1.0f, 1.0f, 1.0f};
+  _dirLight.specular = {0.1f, 0.1f, 0.1f, 1.0f};
+
+  // pointLight_1
+  _pointLight.ambient = {0.1f, 0.1f, 0.1f, 1.0f};
+  _pointLight.diffuse = {0.1f, 0.5f, 0.1f, 1.0f};
+  _pointLight.specular = {0.1f, 0.5f, 0.1f, 1.0f};
+  _pointLight.position = {1.0f, 0.0f, 0.0f, 1.0f};
+
+  _pointLight.constant = 1.0f;
+  _pointLight.linear = 2.2e-2f;
+  _pointLight.quadratic = 1.9e-3f;
+
+  // spotLight_1
+  _spotLight.position = {-2.5f, 0.75f, -0.5f, 1.0f};
+  _spotLight.direction = {-1.0f, -1.0f, 0.0f, 0.0f};
+
+  _spotLight.ambient = {0.2f, 0.2f, 0.2f, 1.0f};
+  _spotLight.diffuse = {1.0f, 1.0f, 1.0f, 1.0f};
+  _spotLight.specular = {1.0f, 1.0f, 1.0f, 1.0f};
+
+  _spotLight.constant = 1.5f;
+  _spotLight.linear = 0.5f;
+  _spotLight.quadratic = 0.2f;
+  _spotLight.cutOff = 45.0f;
+  _spotLight.outerCutOff = 60.0f;
+
   OGL_CHECKPOINT_DEBUG();
 }
 
