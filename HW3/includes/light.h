@@ -24,7 +24,8 @@ struct DirectionalLight : public Light {
     iShader.setUniformValue((iPrefix + ".diffuse").c_str(), diffuse);
     iShader.setUniformValue((iPrefix + ".specular").c_str(), specular);
 
-    iShader.setUniformValue((iPrefix + ".status").c_str(), status);
+    iShader.setUniformValue((iPrefix + ".status").c_str(),
+                            (status == ENABLED) ? 1.0f : 0.0f);
   }
 
   void AddGUI();
@@ -57,7 +58,8 @@ struct PointLight : public Light {
     iShader.setUniformValue((iPrefix + ".linear").c_str(), linear);
     iShader.setUniformValue((iPrefix + ".quadratic").c_str(), quadratic);
 
-    iShader.setUniformValue((iPrefix + ".status").c_str(), status);
+    iShader.setUniformValue((iPrefix + ".status").c_str(),
+                            (status == ENABLED) ? 1.0f : 0.0f);
   }
 
   void AddGUI();
@@ -93,7 +95,8 @@ struct SpotLight : public Light {
     iShader.setUniformValue((iPrefix + ".cutOff").c_str(), cutOff);
     iShader.setUniformValue((iPrefix + ".outerCutOff").c_str(), outerCutOff);
 
-    iShader.setUniformValue((iPrefix + ".status").c_str(), status);
+    iShader.setUniformValue((iPrefix + ".status").c_str(),
+                            (status == ENABLED) ? 1.0f : 0.0f);
   }
 
   void AddGUI();

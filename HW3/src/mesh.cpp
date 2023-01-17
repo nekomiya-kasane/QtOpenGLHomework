@@ -2,6 +2,11 @@
 
 #include <cmath>
 
+/*###################################################
+##  函数: CreateSphere
+##  函数描述： Generate sphere mesh
+##  参数描述： 无
+#####################################################*/
 void CreateSphere(unsigned int iLongitude, unsigned int iLatitude,
                   Mesh& oMesh) {
   const float PI = 3.1415926535897f;

@@ -122,6 +122,17 @@ class MyGLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
   } _material;
 
   // Lights
+  enum LightingModel {
+    LAMBERT = 0x0100u,
+    HALF_LAMBERT = 0x0200u,
+    PHONG = 0x0400u,
+    BLINN_PHONG = 0x1000u,
+
+    SHOW_NORM = 0x2000u,
+    SHOW_COLOR = 0x4000u
+  } _lightingModel = PHONG;
+  int _guiLightingModel = 3;
+
   DirectionalLight _dirLight;
   SpotLight _spotLight;
   PointLight _pointLight;

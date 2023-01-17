@@ -283,16 +283,49 @@ void MyGLWidget::paintGL() {
     _mainShader.setUniformValue("material.ambient", _material.ambient);
     _mainShader.setUniformValue("material.diffuse", _material.diffuse);
     _mainShader.setUniformValue("material.specular", _material.specular);
-    _mainShader.setUniformValue("material.shiness", _material.shiness);
+    _mainShader.setUniformValue("material.shininess", _material.shiness);
 
     // Update Lights
     _dirLight.AddGUI();
     _spotLight.AddGUI();
     _pointLight.AddGUI();
 
+    ImGui::Text("Lighting Model");
+    ImGui::Combo("Lighting Model", &_guiLightingModel,
+                 "Lambert\0Half Lambert\0Phong\0Blinn-Phong\0[Extra] Show "
+                 "Norm\0[Extra] Show Ori Color\0\0");
+    switch (_guiLightingModel) {
+      case 0:
+        _lightingModel = LAMBERT;
+        break;
+      case 1:
+        _lightingModel = HALF_LAMBERT;
+        break;
+      case 2:
+        _lightingModel = PHONG;
+        break;
+      case 3:
+        _lightingModel = BLINN_PHONG;
+        break;
+      case 4:
+        _lightingModel = SHOW_NORM;
+        break;
+      case 5:
+        _lightingModel = SHOW_COLOR;
+        break;
+    }
+    static const std::map<decltype(_lightingModel), float> lmmap = {
+        {LAMBERT, 0.1f},     {HALF_LAMBERT, 0.3f}, {PHONG, 0.5f},
+        {BLINN_PHONG, 0.7f}, {SHOW_NORM, -0.1f},   {SHOW_COLOR, -0.3f}};
+    _mainShader.setUniformValue("lightingModel_float",
+                                static_cast<float>(lmmap.at(_lightingModel)));
+
     _dirLight.UpdateToShader("directionalLight", _mainShader);
     _spotLight.UpdateToShader("spotLight", _mainShader);
     _pointLight.UpdateToShader("pointLight", _mainShader);
+
+    // Update Camera Position
+    _mainShader.setUniformValue("camera_position", _camera.position);
 
     // Draw
     auto& instance = _sphereMeshes.at(static_cast<size_t>(_currentMesh));
@@ -349,6 +382,11 @@ const QMatrix4x4& MyGLWidget::GetProjMatrix() {
   return _proj;
 }
 
+/*###################################################
+##  函数: **Event
+##  函数描述： Handle mouse and keyboard events
+##  参数描述： 无
+#####################################################*/
 void MyGLWidget::mousePressEvent(QMouseEvent* event) {
   auto& io = ImGui::GetIO();
   if (!io.WantCaptureMouse) {
@@ -393,19 +431,25 @@ void MyGLWidget::mouseMoveEvent(QMouseEvent* event) {
     }
 
     _status._moved = true;
-
-    std::cout << event->x() << ", " << event->y() << std::endl;
   }
 }
 
 #if QT_CONFIG(wheelevent)
 void MyGLWidget::wheelEvent(QWheelEvent* event) {
-  _status._mouseWheeling[0] = static_cast<float>(event->x());
-  _status._mouseWheeling[1] = static_cast<float>(event->y());
+  // std::cout << "Wheel Event: " << event->x() / 360.0f << std::endl;
+  _status._mouseWheeling[0] =
+      static_cast<float>((event->delta() < 0 ? -1 : 1) * event->x() / 360.f);
+  _status._mouseWheeling[1] =
+      static_cast<float>((event->delta() < 0 ? -1 : 1) * event->y() / 360.f);
   _status._wheeled = true;
 }
 #endif
 
+/*###################################################
+##  函数: Reset*
+##  函数描述： Reset movement information
+##  参数描述： 无
+#####################################################*/
 void MyGLWidget::Status::ResetMove() {
   _mouseCoord[0] = 0;
   _mouseCoord[1] = 0;
