@@ -13,6 +13,7 @@ INCLUDEPATH += includes
 SOURCES += \
     src/checkpoint.cpp \
     src/main.cpp \
+    src/mesh.cpp \
     src/myglwidget.cpp \
 
 HEADERS += \
@@ -21,6 +22,7 @@ HEADERS += \
     includes/GL/glxew.h \
     includes/GL/wglew.h \
     includes/common.h \
+    includes/mesh.h \
     includes/myglwidget.h
 
 win32: LIBS += -lGlU32

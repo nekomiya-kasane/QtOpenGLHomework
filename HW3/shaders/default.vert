@@ -3,24 +3,22 @@
 in vec3 position;
 in vec3 normal;
 in vec2 texcoord;
+in vec3 color;
 
-uniform camera {
-    mat4 view;
-    mat4 proj;
-};
-
+uniform mat4 view;
+uniform mat4 proj;
 uniform mat4 model;
 
-out VS_OUT {
-    vec4 vso_position;
-    vec3 vso_normal;
-    vec2 vso_texcoord;
-} vs_out;
+out vec4 vso_position;
+out vec3 vso_normal;
+out vec2 vso_texcoord;
+out vec3 vso_color;
 
 void main()
 {
-    gl_Position = proj * view * model * vec4(position, 1.0);
-    vs_out.position = vec4(position + 0.00001 * (vec3(texcoord, 1) + normal), 1.0);
-    vs_out.normal = (transpose(inverse(view)) * model * vec4(normal, 0)).xyz;
-    vs_out.texcoord = texcoord;
+    gl_Position = vec4(position, 1.0);
+    vso_position = gl_Position;
+    vso_normal = (transpose(inverse(view)) * model * vec4(normal, 0)).xyz;
+    vso_texcoord = texcoord;
+    vso_color = color;
 }

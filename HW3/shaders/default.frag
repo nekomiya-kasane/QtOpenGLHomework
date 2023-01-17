@@ -1,16 +1,14 @@
 #version 430 core
-
-in VS_OUT {
-    vec4 position;
-    vec3 normal;
-    vec2 texcoord;
-} gs_in;
-
-vec3 position;
+in vec4 vso_position;
+in vec3 vso_normal;
+in vec2 vso_texcoord;
+in vec3 vso_color;
 
 out vec4 FragColor;
 
 void main() {
+    vec4 position = vso_position;
+
     if (position.x > 0 && position.y > 0 && position.z > 0) {
         FragColor = vec4(1, 1, 1, 1);
     }
